@@ -109,8 +109,8 @@ def download_art_photo(input_link_struct, path='.', folders=False):
                     if not data:
                         break
                     out.write(data)
-                    site_file_path = os.path.join(site_path, write_path)
-                    output_files_struct[art].append(os.path.normpath(site_file_path))
+            site_file_path = os.path.join(site_path, write_path)
+            output_files_struct[art].append(os.path.normpath(site_file_path))
             r.release_conn()
 
     return output_files_struct
