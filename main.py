@@ -1,6 +1,5 @@
 from openpyxl import load_workbook
 from openpyxl import Workbook
-import json
 import urllib3
 import configparser
 import os
@@ -31,8 +30,10 @@ def prepare_config(filename):
                     'create_art_folders = True\n'
                     'site_path = loft-it.ru/docs/_shop/loft_it/'
                     )
-    config_obj = configparser.ConfigParser()
-    config_obj.read(filename)
+        config_obj = None
+    else:
+        config_obj = configparser.ConfigParser()
+        config_obj.read(filename)
     return config_obj
 
 
@@ -117,24 +118,24 @@ def download_art_photo(input_link_struct, path='.', folders=False):
 
 if __name__ == '__main__':
     config = prepare_config('IMGdownloader.ini')
+    if config:
+        url_replace = str.split(config['global_settings']['url_replace'], ',')
+        data_chunks = int(config['global_settings']['data_chunks'])
+        max_photos = int(config['global_settings']['max_photos'])
+        first_row = int(config['global_settings']['first_row'])
+        last_row = int(config['global_settings']['last_row'])
+        if last_row <= 0:
+            last_row = None
+        default_file_format = config['global_settings']['default_file_format']
 
-    url_replace = str.split(config['global_settings']['url_replace'], ',')
-    data_chunks = int(config['global_settings']['data_chunks'])
-    max_photos = int(config['global_settings']['max_photos'])
-    first_row = int(config['global_settings']['first_row'])
-    last_row = int(config['global_settings']['last_row'])
-    if last_row <= 0:
-        last_row = None
-    default_file_format = config['global_settings']['default_file_format']
+        create_art_folders = config['paths'].getboolean('create_art_folders')
+        input_file = config['paths']['input_file']
+        output_file = config['paths']['output_file']
+        site_path = config['paths']['site_path']
+        output_folder = config['paths']['output_folder']
 
-    create_art_folders = config['paths'].getboolean('create_art_folders')
-    input_file = config['paths']['input_file']
-    output_file = config['paths']['output_file']
-    site_path = config['paths']['site_path']
-    output_folder = config['paths']['output_folder']
+        file_struct = read_excel(input_file)
+        links_struct = download_art_photo(file_struct)
+        write_excel(links_struct)
 
-    file_struct = read_excel(input_file)
-    links_struct = download_art_photo(file_struct)
-    write_excel(links_struct)
-
-    input("Press Enter to continue...")
+        input("Press Enter to continue...")
