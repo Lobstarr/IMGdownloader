@@ -28,7 +28,9 @@ def prepare_config(filename):
                     'output_file = output.xlsx\n'
                     '# enable to put each row to separate folder\n'
                     'create_art_folders = True\n'
-                    'site_path = /_shop/'
+                    'site_path = /_shop/\n'
+                    '# disable to use backslashes (\\) in paths\n'
+                    'nix_paths = True'
                     )
         config_obj = None
     else:
@@ -83,9 +85,10 @@ def download_art_photo(input_link_struct, path='.', folders=False):
         files_iterator = 0
 
         if create_art_folders:
-            output_path = os.path.join(output_folder, prepared_art)
+            photo_dir_path = prepared_art
         else:
-            output_path = output_folder
+            photo_dir_path = None
+        output_path = os.path.join(output_folder, photo_dir_path)
         os.makedirs(output_path, exist_ok=True)
 
         for photo in photos_arr:
@@ -109,8 +112,13 @@ def download_art_photo(input_link_struct, path='.', folders=False):
                     if not data:
                         break
                     out.write(data)
-            site_file_path = os.path.join(site_path, write_path)
-            output_files_struct[art].append(os.path.normpath(site_file_path))
+            site_file_path = os.path.join(site_path, photo_dir_path, filename_art)
+            clean_path = os.path.normpath(site_file_path)
+            if nix_paths:
+                clean_path = clean_path.replace('\\', '/')
+            else:
+                clean_path = clean_path.replace('/', '\\')
+            output_files_struct[art].append(clean_path)
             r.release_conn()
 
     return output_files_struct
@@ -133,6 +141,7 @@ if __name__ == '__main__':
         output_file = config['paths']['output_file']
         site_path = config['paths']['site_path']
         output_folder = config['paths']['output_folder']
+        nix_paths = config['paths'].getboolean('nix_paths')
 
         file_struct = read_excel(input_file)
         links_struct = download_art_photo(file_struct)
