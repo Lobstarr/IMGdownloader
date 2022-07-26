@@ -13,7 +13,7 @@ def prepare_config(filename):
                     'url_replace = +, ,/,%%,*\n'
                     '# 64k, increase if needed\n'
                     'data_chunks = 65536\n'
-                    '# photos limit\n'
+                    '# photos limit, put -1 for no limit\n'
                     'max_photos = -1\n'
                     '# excel starting row\n'
                     'first_row = 2\n'
@@ -28,7 +28,7 @@ def prepare_config(filename):
                     'output_file = output.xlsx\n'
                     '# enable to put each row to separate folder\n'
                     'create_art_folders = True\n'
-                    'site_path = loft-it.ru/docs/_shop/loft_it/'
+                    'site_path = /_shop/'
                     )
         config_obj = None
     else:
