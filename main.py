@@ -3,6 +3,7 @@ from openpyxl import Workbook
 import urllib3
 import configparser
 import os
+import re
 
 
 def prepare_config(filename):
@@ -20,9 +21,13 @@ def prepare_config(filename):
                     '# for entire file set to -1\n'
                     'last_row = -1\n'
                     'default_file_format = .jpg\n'
+                    '# Set True to skip links ending by /\n'
+                    '# sipping http://exmlpe.com/photos/\n'
+                    '# not skipping http://exmlpe.com/photos/photo.jpg'
+                    'skip_trailing_slashes = True\n'
                     '\n'
                     '[paths]\n'
-                    '# file must contain arikul in first column and photos in others\n'
+                    '# file must contain artikul in first column and photos in others\n'
                     'input_file = input.xlsx\n'
                     'output_folder = output\n'
                     'output_file = output.xlsx\n'
@@ -51,11 +56,18 @@ def read_excel(excel_file):
     wb = load_workbook(excel_file)
     ws = wb.active
 
+    regex = re.compile(r'\s\s*')
+
     for row in ws.iter_rows(min_row=first_row, max_row=last_row, values_only=True):
         row_arr = []
         for cell in row[1:]:
             if cell:
-                row_arr.append(cell)
+                cell = regex.sub('', cell)
+                if cell[-1::1] == '/' and skip_trailing_slashes:
+                    pass
+                else:
+                    row_arr.append(regex.sub('', cell))
+
         out_struct[row[0]] = row_arr
 
     return out_struct
@@ -78,7 +90,12 @@ def write_excel(input_struct):
 def download_art_photo(input_link_struct, path='.', folders=False):
     http = urllib3.PoolManager()
     output_files_struct = {}
+    empty_folders_counter = 0
     for art, photos_arr in input_link_struct.items():
+        if not photos_arr:
+            print('No photo for', art, '!')
+            empty_folders_counter += 1
+            continue
         prepared_art = prepare_for_url(str(art))
         output_files_struct[art] = []
         print('Downloading', prepared_art)
@@ -121,6 +138,8 @@ def download_art_photo(input_link_struct, path='.', folders=False):
             output_files_struct[art].append(clean_path)
             r.release_conn()
 
+    if empty_folders_counter:
+        print(empty_folders_counter, 'skipped')
     return output_files_struct
 
 
@@ -135,6 +154,7 @@ if __name__ == '__main__':
         if last_row <= 0:
             last_row = None
         default_file_format = config['global_settings']['default_file_format']
+        skip_trailing_slashes = config['global_settings'].getboolean('skip_trailing_slashes')
 
         create_art_folders = config['paths'].getboolean('create_art_folders')
         input_file = config['paths']['input_file']
