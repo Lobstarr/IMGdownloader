@@ -56,17 +56,19 @@ def read_excel(excel_file):
     wb = load_workbook(excel_file)
     ws = wb.active
 
-    regex = re.compile(r'\s\s*')
+    regex_start = re.compile(r'^\s\s*')
+    regex_end = re.compile(r'\s\s*$')
 
     for row in ws.iter_rows(min_row=first_row, max_row=last_row, values_only=True):
         row_arr = []
         for cell in row[1:]:
             if cell:
-                cell = regex.sub('', cell)
+                cell = regex_start.sub('', cell)
+                cell = regex_end.sub('', cell)
                 if cell[-1::1] == '/' and skip_trailing_slashes:
                     pass
                 else:
-                    row_arr.append(regex.sub('', cell))
+                    row_arr.append(cell)
 
         out_struct[row[0]] = row_arr
 
