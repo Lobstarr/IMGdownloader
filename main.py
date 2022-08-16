@@ -69,8 +69,8 @@ def read_excel(excel_file):
                     pass
                 else:
                     row_arr.append(cell)
-
-        out_struct[row[0]] = row_arr
+        if row[0]:
+            out_struct[row[0]] = row_arr
 
     return out_struct
 
